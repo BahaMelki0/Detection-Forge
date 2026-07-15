@@ -1,0 +1,21 @@
+id: DF-WIN-003
+title: Suspicious Certutil file transfer or decode
+description: Certutil was invoked with arguments commonly abused to download or decode payloads.
+type: event
+sources: [windows, sysmon]
+severity: high
+match:
+  conditions:
+    action: process_created
+    details.process_name:
+      contains: certutil
+    details.command_line:
+      contains_any: ['-urlcache', '-decode', '-decodehex', '-split']
+attack:
+  id: T1105
+  name: Ingress Tool Transfer
+  tactic: Command and Control
+  url: https://attack.mitre.org/techniques/T1105/
+remediation: Retrieve the transferred file, calculate its hashes, block identified infrastructure, and inspect the parent and subsequent processes.
+false_positives: Certificate administration and PKI troubleshooting.
+

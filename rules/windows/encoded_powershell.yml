@@ -1,0 +1,20 @@
+id: DF-WIN-001
+title: Encoded PowerShell execution
+description: PowerShell was launched with an encoded or obfuscated command line.
+type: event
+sources: [windows, sysmon]
+severity: high
+match:
+  conditions:
+    action: process_created
+    details.process_name:
+      contains: powershell
+    details.command_line:
+      contains_any: [-enc, -encodedcommand, frombase64string]
+attack:
+  id: T1059.001
+  name: PowerShell
+  tactic: Execution
+  url: https://attack.mitre.org/techniques/T1059/001/
+remediation: Isolate the host, recover and decode the command, inspect the parent process, and collect related process and network telemetry.
+

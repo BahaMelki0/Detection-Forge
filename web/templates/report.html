@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Detection Forge Analysis Report</title>
+  <style>
+    :root{font-family:Arial,sans-serif;color:#17212b}body{max-width:1100px;margin:40px auto;padding:0 24px}header{border-bottom:3px solid #159e94;padding-bottom:20px;margin-bottom:28px}h1{margin:0;font-size:28px}header p,.muted{color:#607080}h2{margin-top:32px;font-size:18px}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.summary div{border:1px solid #ced7de;padding:14px}.summary strong{display:block;font-size:24px}.summary span,th{font-size:10px;text-transform:uppercase;color:#647481}table{width:100%;border-collapse:collapse;font-size:12px}th,td{text-align:left;border-bottom:1px solid #dbe2e7;padding:10px 8px;vertical-align:top}.critical{color:#c51f32}.high{color:#c65b00}.medium{color:#946c00}.files{margin:0;padding-left:18px}.detection{page-break-inside:avoid;border:1px solid #d7dfe5;margin:14px 0;padding:16px}.detection h3{margin:0 0 5px}.meta{font-family:monospace;color:#526471}.guidance{background:#f3f6f8;padding:10px;margin-top:10px}@media print{body{margin:0}.detection{break-inside:avoid}}
+  </style>
+</head>
+<body>
+  <header><h1>Detection Forge Analysis Report</h1><p>Generated from the persistent investigation workspace{% if generated_at %} &middot; {{ generated_at|short_time }}{% endif %}</p></header>
+  <section class="summary">
+    <div><span>Input files</span><strong>{{ files|length }}</strong></div>
+    <div><span>Normalized events</span><strong>{{ event_count }}</strong></div>
+    <div><span>Detections</span><strong>{{ alerts|length }}</strong></div>
+    <div><span>Critical</span><strong class="critical">{{ alerts|selectattr('severity', 'equalto', 'critical')|list|length }}</strong></div>
+  </section>
+
+  <h2>Input inventory</h2>
+  {% if files %}<table><thead><tr><th>File</th><th>Profile</th><th>Source</th><th>Events</th><th>Uploaded</th></tr></thead><tbody>
+  {% for file in files %}<tr><td>{{ file.filename }}</td><td>{{ file.profile }}</td><td>{{ file.source }}</td><td>{{ file.event_count }}</td><td>{{ file.uploaded_at|short_time }}</td></tr>{% endfor %}
+  </tbody></table>{% else %}<p class="muted">No uploaded files in this workspace.</p>{% endif %}
+
+  <h2>Detection findings</h2>
+  {% for alert in alerts %}
+  <article class="detection">
+    <div class="meta"><strong class="{{ alert.severity }}">{{ alert.severity|upper }}</strong> &middot; {{ alert.rule_id }} &middot; {{ alert.timestamp|short_time }}</div>
+    <h3>{{ alert.rule_title }}</h3>
+    <p>{{ alert.description }}</p>
+    <p><b>Input file source:</b> {{ (alert.events|origin_files)|join(', ') }}<br><b>Telemetry:</b> {{ alert.sources|join(', ') }}<br><b>MITRE ATT&amp;CK:</b> {{ alert.attack.id }} &mdash; {{ alert.attack.name }}</p>
+    <div class="guidance"><b>Recommended response:</b> {{ alert.remediation }}</div>
+  </article>
+  {% else %}<p class="muted">No detections were generated for the current workspace.</p>{% endfor %}
+</body>
+</html>

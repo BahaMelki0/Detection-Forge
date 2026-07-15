@@ -1,0 +1,19 @@
+id: DF-WIN-010
+title: Member added to privileged Windows group
+description: An identity was added to a highly privileged local or domain security group.
+type: event
+source: windows
+severity: high
+match:
+  conditions:
+    action: member_added_to_security_group
+    details.group_name:
+      contains_any: ['Administrators', 'Domain Admins', 'Enterprise Admins', 'Schema Admins']
+attack:
+  id: T1098
+  name: Account Manipulation
+  tactic: Persistence, Privilege Escalation
+  url: https://attack.mitre.org/techniques/T1098/
+remediation: Remove unauthorized membership, disable the initiating identity if compromised, and review directory changes and privileged logons.
+false_positives: Approved privileged-access provisioning.
+

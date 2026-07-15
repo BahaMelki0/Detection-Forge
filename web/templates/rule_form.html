@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% macro condition_row(field='', operator='equals', value='') %}
+<div class="condition-row">
+  <span class="condition-index">01</span>
+  <label><span>Normalized field</span><select name="condition_field">{% for option in fields %}<option value="{{ option }}" {{ 'selected' if option == field }}>{{ option }}</option>{% endfor %}</select></label>
+  <label><span>Operator</span><select name="condition_operator">{% for option in operators %}<option value="{{ option }}" {{ 'selected' if option == operator }}>{{ option|replace('_', ' ') }}</option>{% endfor %}</select></label>
+  <label><span>Value</span><input name="condition_value" value="{{ value }}" placeholder="e.g. process_created"></label>
+  <button class="remove-condition" type="button" aria-label="Remove condition">&times;</button>
+</div>
+{% endmacro %}
+{% block title %}Create detection rule &middot; Detection Forge{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('rules') }}">&larr; Back to active rules</a>
+<section class="page-heading rule-form-heading">
+  <div><p class="eyebrow">DETECTION-AS-CODE / RULE BUILDER</p><h1>Create detection rule</h1><p>Complete the structured fields. Detection Forge validates and generates the YAML artifact.</p></div>
+  <span class="form-status">SERVER-SIDE VALIDATED</span>
+</section>
+
+{% if error %}<div class="form-error"><strong>RULE NOT CREATED</strong><span>{{ error }}</span><small>Correct the highlighted input or rule logic and submit again. No YAML file was written.</small></div>{% endif %}
+
+<form class="rule-builder" method="post" novalidate>
+  <section class="panel form-section">
+    <div class="section-title"><span>01</span><div><h2>Rule identity</h2><p>Version-controlled metadata used by analysts and the engine.</p></div></div>
+    <div class="form-grid">
+      <label><span>Rule ID *</span><input name="rule_id" required maxlength="64" value="{{ form.get('rule_id', '') }}" placeholder="DF-WIN-012"><small>Unique; letters, numbers, dots, dashes, underscores.</small></label>
+      <label><span>Detection type *</span><select name="rule_type" id="rule-type"><option value="event" {{ 'selected' if form.get('rule_type', 'event') == 'event' }}>Single event</option><option value="correlation" {{ 'selected' if form.get('rule_type') == 'correlation' }}>Two-stage correlation</option></select></label>
+      <label><span>Severity *</span><select name="severity">{% for severity in severities %}<option value="{{ severity }}" {{ 'selected' if form.get('severity', 'medium') == severity }}>{{ severity|title }}</option>{% endfor %}</select></label>
+      <label class="span-2"><span>Title *</span><input name="title" required value="{{ form.get('title', '') }}" placeholder="Suspicious remote service creation"></label>
+      <label class="span-all"><span>Description *</span><textarea name="description" required rows="3" placeholder="Explain what behavior this rule detects and why it matters.">{{ form.get('description', '') }}</textarea></label>
+    </div>
+  </section>
+
+  <section class="panel form-section" id="event-logic">
+    <div class="section-title"><span>02</span><div><h2>Event matching logic</h2><p>All conditions must match the same normalized event.</p></div></div>
+    <fieldset class="source-picker"><legend>Telemetry sources *</legend>{% for source in sources %}<label><input type="checkbox" name="sources" value="{{ source }}" {{ 'checked' if source in form.getlist('sources') }}><span class="source {{ source }}">{{ source }}</span></label>{% endfor %}</fieldset>
+    <div class="builder-label"><span>Conditions</span><small>Use comma-separated values for <b>contains any</b> and <b>in</b>.</small></div>
+    <div id="condition-rows">{% for field, operator, value in condition_rows %}{{ condition_row(field, operator, value) }}{% endfor %}</div>
+    <template id="condition-template">{{ condition_row() }}</template>
+    <button class="add-condition" id="add-condition" type="button">+ ADD CONDITION</button>
+  </section>
+
+  <section class="panel form-section" id="correlation-logic" hidden>
+    <div class="section-title"><span>02</span><div><h2>Correlation sequence</h2><p>Match two ordered events sharing the same identity, host, or source IP.</p></div></div>
+    {% for number in (1, 2) %}
+    <div class="correlation-stage">
+      <strong>STAGE 0{{ number }}</strong>
+      <label><span>Source *</span><select name="stage{{ number }}_source">{% for source in sources %}<option value="{{ source }}" {{ 'selected' if form.get('stage' ~ number ~ '_source') == source }}>{{ source|title }}</option>{% endfor %}</select></label>
+      <label><span>Field *</span><select name="stage{{ number }}_field">{% for field in fields %}<option value="{{ field }}" {{ 'selected' if form.get('stage' ~ number ~ '_field', 'action') == field }}>{{ field }}</option>{% endfor %}</select></label>
+      <label><span>Operator *</span><select name="stage{{ number }}_operator">{% for operator in operators %}<option value="{{ operator }}" {{ 'selected' if form.get('stage' ~ number ~ '_operator', 'equals') == operator }}>{{ operator|replace('_', ' ') }}</option>{% endfor %}</select></label>
+      <label><span>Value *</span><input name="stage{{ number }}_value" value="{{ form.get('stage' ~ number ~ '_value', '') }}"></label>
+    </div>
+    {% endfor %}
+    <div class="form-grid compact-grid">
+      <label><span>Group events by *</span><select name="group_by">{% for field in group_fields %}<option value="{{ field }}" {{ 'selected' if form.get('group_by', 'user') == field }}>{{ field|replace('_', ' ')|title }}</option>{% endfor %}</select></label>
+      <label><span>Timeframe in minutes *</span><input type="number" min="1" max="1440" name="timeframe_minutes" value="{{ form.get('timeframe_minutes', '15') }}"></label>
+    </div>
+  </section>
+
+  <section class="panel form-section">
+    <div class="section-title"><span>03</span><div><h2>ATT&amp;CK and analyst guidance</h2><p>Give responders enough context to understand and act on the finding.</p></div></div>
+    <div class="form-grid">
+      <label><span>Technique ID *</span><input name="attack_id" required value="{{ form.get('attack_id', '') }}" placeholder="T1059.001"></label>
+      <label><span>Technique name *</span><input name="attack_name" required value="{{ form.get('attack_name', '') }}" placeholder="PowerShell"></label>
+      <label><span>Tactic *</span><input name="attack_tactic" required value="{{ form.get('attack_tactic', '') }}" placeholder="Execution"></label>
+      <label class="span-all"><span>MITRE ATT&amp;CK URL *</span><input type="url" name="attack_url" required value="{{ form.get('attack_url', '') }}" placeholder="https://attack.mitre.org/techniques/T1059/001/"></label>
+      <label class="span-all"><span>Recommended response *</span><textarea name="remediation" required rows="3" placeholder="Describe investigation, containment, and recovery actions.">{{ form.get('remediation', '') }}</textarea></label>
+      <label class="span-all"><span>Known false positives</span><textarea name="false_positives" rows="2" placeholder="One scenario per line">{{ form.get('false_positives', '') }}</textarea></label>
+    </div>
+  </section>
+
+  <div class="form-submit"><a href="{{ url_for('rules') }}">CANCEL</a><span>The YAML is written only after the complete registry validates.</span><button type="submit">VALIDATE &amp; CREATE RULE <b>&rarr;</b></button></div>
+</form>
+
+<script>
+(() => {
+  const type = document.getElementById('rule-type');
+  const eventSection = document.getElementById('event-logic');
+  const correlationSection = document.getElementById('correlation-logic');
+  const rows = document.getElementById('condition-rows');
+  const template = document.getElementById('condition-template');
+  const toggle = () => {
+    const correlation = type.value === 'correlation';
+    eventSection.hidden = correlation;
+    correlationSection.hidden = !correlation;
+    eventSection.querySelectorAll('input,select').forEach(input => input.disabled = correlation);
+    correlationSection.querySelectorAll('input,select').forEach(input => input.disabled = !correlation);
+  };
+  const renumber = () => [...rows.querySelectorAll('.condition-row')].forEach((row, index) => {
+    row.querySelector('.condition-index').textContent = String(index + 1).padStart(2, '0');
+    row.querySelector('.remove-condition').hidden = rows.children.length === 1;
+  });
+  type.addEventListener('change', toggle);
+  document.getElementById('add-condition').addEventListener('click', () => { rows.appendChild(template.content.cloneNode(true)); renumber(); });
+  rows.addEventListener('click', event => { if (event.target.classList.contains('remove-condition') && rows.children.length > 1) { event.target.closest('.condition-row').remove(); renumber(); } });
+  toggle(); renumber();
+})();
+</script>
+{% endblock %}

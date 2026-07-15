@@ -1,0 +1,25 @@
+id: DF-CROSS-001
+title: Risky cloud sign-in followed by privileged Windows logon
+description: The same identity generated a risky Entra sign-in and received special privileges on a Windows host shortly afterward.
+type: correlation
+sources: [entra, windows]
+severity: critical
+group_by: user
+timeframe_minutes: 20
+sequence:
+  - source: entra
+    conditions:
+      action: user_sign_in
+      outcome: success
+      details.risk_level:
+        in: [high, medium]
+  - source: windows
+    conditions:
+      action: special_privileges_assigned
+attack:
+  id: T1078
+  name: Valid Accounts
+  tactic: Defense Evasion, Persistence, Privilege Escalation, Initial Access
+  url: https://attack.mitre.org/techniques/T1078/
+remediation: Disable the identity, revoke cloud sessions, isolate the endpoint, and correlate authentication, privilege, and process activity across both environments.
+

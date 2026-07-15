@@ -1,0 +1,17 @@
+id: DF-WIN-008
+title: Scheduled task created
+description: A new Windows scheduled task was registered and may provide execution or persistence.
+type: event
+source: windows
+severity: medium
+match:
+  conditions:
+    action: scheduled_task_created
+attack:
+  id: T1053.005
+  name: Scheduled Task
+  tactic: Execution, Persistence, Privilege Escalation
+  url: https://attack.mitre.org/techniques/T1053/005/
+remediation: Review the task name, XML content, principal, triggers, and executable; remove unauthorized tasks and investigate their creator.
+false_positives: Software deployment, monitoring agents, and legitimate administrative automation.
+

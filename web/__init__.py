@@ -1,0 +1,2 @@
+"""Detection Forge web interface."""
+

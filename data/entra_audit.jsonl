@@ -1,0 +1,1 @@
+{"activityDateTime":"2026-06-12T09:05:00Z","activityDisplayName":"Add member to role","operationType":"Assign","category":"RoleManagement","result":"success","initiatedBy":{"user":{"userPrincipalName":"admin@contoso.com","ipAddress":"198.51.100.27"}},"targetResources":[{"type":"User","displayName":"alice@contoso.com"},{"type":"Role","displayName":"Global Administrator"}]}

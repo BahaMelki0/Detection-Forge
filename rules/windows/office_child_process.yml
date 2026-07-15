@@ -1,0 +1,21 @@
+id: DF-WIN-002
+title: Microsoft Office spawned a command interpreter
+description: An Office application launched a shell or script interpreter, a common initial-access execution pattern.
+type: event
+sources: [windows, sysmon]
+severity: high
+match:
+  conditions:
+    action: process_created
+    details.parent_process:
+      regex: '\\(winword|excel|powerpnt|outlook)\.exe$'
+    details.process_name:
+      regex: '\\(cmd|powershell|pwsh|wscript|cscript|mshta)\.exe$'
+attack:
+  id: T1204.002
+  name: Malicious File
+  tactic: Execution
+  url: https://attack.mitre.org/techniques/T1204/002/
+remediation: Isolate the endpoint, preserve the document and process tree, and inspect child-process network activity and payloads.
+false_positives: Legitimate Office macros and enterprise document automation.
+

@@ -1,0 +1,17 @@
+id: DF-WIN-009
+title: Windows user account created
+description: A local or domain user account was created and should be verified against approved identity operations.
+type: event
+source: windows
+severity: medium
+match:
+  conditions:
+    action: user_account_created
+attack:
+  id: T1136.001
+  name: Local Account
+  tactic: Persistence
+  url: https://attack.mitre.org/techniques/T1136/001/
+remediation: Validate the account creator and business justification, disable unauthorized accounts, and review subsequent group membership and logon activity.
+false_positives: Approved user provisioning and automated endpoint-management workflows.
+

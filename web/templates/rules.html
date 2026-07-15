@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Detection rules &middot; Detection Forge{% endblock %}
+{% block content %}
+<section class="page-heading">
+  <div><p class="eyebrow">DETECTION ENGINE / RULE REGISTRY</p><h1>Active detection rules</h1><p>Version-controlled YAML artifacts loaded by the source-agnostic engine.</p></div>
+  <a class="primary-link" href="{{ url_for('new_rule') }}">+ CREATE DETECTION RULE</a>
+</section>
+
+<nav class="rule-filters" aria-label="Filter rules by telemetry source">
+  <span>FILTER BY SOURCE</span>
+  <a class="{{ 'active' if selected_source == 'all' }}" href="{{ url_for('rules') }}">All <b>{{ total_rules }}</b></a>
+  {% for source in ('entra', 'windows', 'sysmon') %}
+    <a class="{{ 'active' if selected_source == source }}" href="{{ url_for('rules', source=source) }}"><i class="source-dot {{ source }}"></i>{{ source|title }} <b>{{ source_counts[source] }}</b></a>
+  {% endfor %}
+  <small>Showing {{ rules|length }} of {{ total_rules }} rules</small>
+</nav>
+
+<section class="rule-grid">
+{% for rule in rules %}
+  <article class="panel rule-card">
+    <div class="rule-top"><span class="severity {{ rule.severity }}"><i></i>{{ rule.severity }}</span><code>{{ rule.id }}</code></div>
+    <h2>{{ rule.title }}</h2><p>{{ rule.description }}</p>
+    <div class="rule-facts">
+      <div><span>Sources</span><div class="sources">{% for source in rule.sources %}<b class="source {{ source }}">{{ source }}</b>{% endfor %}</div></div>
+      <div><span>Detection type</span><b>{{ rule.type }}{% if rule.type == 'correlation' %} &middot; {{ rule.timeframe_minutes }} min{% endif %}</b></div>
+      <div><span>ATT&amp;CK mapping</span><a href="{{ rule.attack.url }}" target="_blank" rel="noopener">{{ rule.attack.id }} &middot; {{ rule.attack.name }} &nearr;</a></div>
+    </div>
+  </article>
+{% else %}
+  <div class="panel empty rule-empty"><strong>No rules for this source</strong><span>Select another telemetry source or create a new detection rule.</span></div>
+{% endfor %}
+</section>
+{% endblock %}

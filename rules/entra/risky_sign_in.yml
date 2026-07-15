@@ -1,0 +1,20 @@
+id: DF-ENTRA-001
+title: Risky Entra ID sign-in
+description: A successful Entra ID sign-in was classified as high risk.
+type: event
+source: entra
+severity: high
+match:
+  source: entra
+  conditions:
+    action: user_sign_in
+    outcome: success
+    details.risk_level:
+      in: [high, medium]
+attack:
+  id: T1078.004
+  name: Valid Accounts — Cloud Accounts
+  tactic: Initial Access
+  url: https://attack.mitre.org/techniques/T1078/004/
+remediation: Revoke active sessions, reset the account credentials, require phishing-resistant MFA, and review sign-in context.
+

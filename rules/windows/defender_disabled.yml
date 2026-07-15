@@ -1,0 +1,21 @@
+id: DF-WIN-006
+title: Microsoft Defender protections disabled
+description: A PowerShell command attempted to weaken Defender real-time monitoring, behavior monitoring, or exclusions.
+type: event
+sources: [windows, sysmon]
+severity: critical
+match:
+  conditions:
+    action: process_created
+    details.process_name:
+      contains: powershell
+    details.command_line:
+      contains_any: ['DisableRealtimeMonitoring $true', 'DisableBehaviorMonitoring $true', 'Add-MpPreference -ExclusionPath']
+attack:
+  id: T1562.001
+  name: Impair Defenses
+  tactic: Defense Evasion
+  url: https://attack.mitre.org/techniques/T1562/001/
+remediation: Isolate the endpoint, restore security controls, identify the initiating identity, and hunt for payload execution during the protection gap.
+false_positives: Authorized endpoint-security troubleshooting or deployment scripts.
+

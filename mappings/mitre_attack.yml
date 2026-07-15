@@ -1,0 +1,39 @@
+T1078:
+  name: Valid Accounts
+  tactic: Defense Evasion, Persistence, Privilege Escalation, Initial Access
+T1078.004:
+  name: Cloud Accounts
+  tactic: Initial Access
+T1059.001:
+  name: PowerShell
+  tactic: Execution
+T1003.001:
+  name: LSASS Memory
+  tactic: Credential Access
+T1204.002:
+  name: Malicious File
+  tactic: Execution
+T1105:
+  name: Ingress Tool Transfer
+  tactic: Command and Control
+T1218.010:
+  name: Regsvr32
+  tactic: Defense Evasion
+T1218.011:
+  name: Rundll32
+  tactic: Defense Evasion
+T1562.001:
+  name: Impair Defenses
+  tactic: Defense Evasion
+T1070.001:
+  name: Clear Windows Event Logs
+  tactic: Defense Evasion
+T1053.005:
+  name: Scheduled Task
+  tactic: Execution, Persistence, Privilege Escalation
+T1136.001:
+  name: Local Account
+  tactic: Persistence
+T1098:
+  name: Account Manipulation
+  tactic: Persistence, Privilege Escalation

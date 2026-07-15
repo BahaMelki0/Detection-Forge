@@ -1,0 +1,17 @@
+id: DF-WIN-007
+title: Windows Security audit log cleared
+description: Windows recorded Event ID 1102, indicating that the Security audit log was cleared.
+type: event
+source: windows
+severity: critical
+match:
+  conditions:
+    action: audit_log_cleared
+attack:
+  id: T1070.001
+  name: Clear Windows Event Logs
+  tactic: Defense Evasion
+  url: https://attack.mitre.org/techniques/T1070/001/
+remediation: Preserve remaining logs centrally, identify the responsible account and process, isolate the host, and investigate activity preceding the clear operation.
+false_positives: Authorized maintenance performed under a documented change request.
+

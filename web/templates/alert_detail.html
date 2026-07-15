@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}{{ alert.rule_id }} · Detection Forge{% endblock %}
+{% block content %}
+<a class="back" href="{{ url_for('dashboard') }}">← Back to alert queue</a>
+<section class="detail-heading">
+  <span class="severity {{ alert.severity }}"><i></i>{{ alert.severity }}</span>
+  <h1>{{ alert.rule_title }}</h1>
+  <p>{{ alert.description }}</p>
+  <div class="detail-meta"><span>Alert ID <b>{{ alert.id[:8] }}</b></span><span>Rule <b>{{ alert.rule_id }}</b></span><span>Observed <b>{{ alert.timestamp|short_time }}</b></span></div>
+</section>
+
+<div class="detail-grid">
+  <div class="detail-main">
+    <section class="panel compact">
+      <div class="panel-header"><div><h2>Evidence timeline</h2><span>{{ alert.events|length }} normalized event{{ 's' if alert.events|length != 1 }}</span></div></div>
+      <div class="timeline">
+      {% for event in alert.events %}
+        <article>
+          <i></i>
+          <div class="timeline-top"><span class="source {{ event.source }}">{{ event.source }}</span><time>{{ event.timestamp|short_time }}</time></div>
+          <h3>{{ event.action|replace('_', ' ')|title }}</h3>
+          <dl><div><dt>Input file</dt><dd>{{ event.origin_file or 'Unknown' }}</dd></div><div><dt>User</dt><dd>{{ event.user or '—' }}</dd></div><div><dt>Host</dt><dd>{{ event.host or '—' }}</dd></div><div><dt>Source IP</dt><dd>{{ event.source_ip or '—' }}</dd></div><div><dt>Outcome</dt><dd>{{ event.outcome }}</dd></div></dl>
+          <details><summary>View raw event</summary><pre>{{ event.raw|tojson(indent=2) }}</pre></details>
+        </article>
+      {% endfor %}
+      </div>
+    </section>
+  </div>
+  <aside>
+    <section class="panel side-card attack-card">
+      <p class="eyebrow">MITRE ATT&amp;CK</p>
+      <strong>{{ alert.attack.id }}</strong>
+      <h2>{{ alert.attack.name }}</h2>
+      <span>{{ alert.attack.tactic }}</span>
+      <a href="{{ alert.attack.url }}" target="_blank" rel="noopener">Open technique ↗</a>
+    </section>
+    <section class="panel side-card remediation">
+      <p class="eyebrow">RECOMMENDED RESPONSE</p>
+      <h2>Analyst guidance</h2>
+      <p>{{ alert.remediation }}</p>
+    </section>
+  </aside>
+</div>
+{% endblock %}

@@ -1,0 +1,20 @@
+id: DF-WIN-011
+title: PowerShell download cradle
+description: PowerShell contains network retrieval primitives frequently used for in-memory or staged payload delivery.
+type: event
+sources: [windows, sysmon]
+severity: high
+match:
+  conditions:
+    action: process_created
+    details.process_name:
+      contains: powershell
+    details.command_line:
+      contains_any: ['Invoke-WebRequest', 'DownloadString(', 'DownloadFile(', 'Start-BitsTransfer', 'Net.WebClient']
+attack:
+  id: T1059.001
+  name: PowerShell
+  tactic: Execution
+  url: https://attack.mitre.org/techniques/T1059/001/
+remediation: Isolate the host, retrieve the full command and downloaded content, and pivot on URLs, hashes, parent processes, and destination hosts.
+false_positives: Approved deployment and administration scripts that retrieve internal resources.

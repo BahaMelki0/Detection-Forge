@@ -1,0 +1,6 @@
+{"TimeCreated":"2026-06-12T09:08:00Z","EventID":4672,"Computer":"DC01.contoso.local","SubjectUserName":"alice@contoso.com","IpAddress":"10.10.20.44"}
+{"TimeCreated":"2026-06-12T09:10:00Z","EventID":4688,"Computer":"WS-044.contoso.local","SubjectUserName":"alice@contoso.com","NewProcessName":"C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe","CommandLine":"powershell.exe -NoP -EncodedCommand SQBFAFgA","ParentProcessName":"C:\\Windows\\System32\\cmd.exe"}
+{"TimeCreated":"2026-06-12T09:30:00Z","EventID":4624,"Computer":"WS-012.contoso.local","TargetUserName":"bob@contoso.com","IpAddress":"10.10.10.12","LogonType":2}
+{"TimeCreated":"2026-06-12T09:15:00Z","EventID":1102,"Computer":"WS-044.contoso.local","SubjectUserName":"alice@contoso.com"}
+{"TimeCreated":"2026-06-12T09:16:00Z","EventID":4698,"Computer":"WS-044.contoso.local","SubjectUserName":"alice@contoso.com","TaskName":"\\Microsoft\\Windows\\UpdateTelemetry","TaskContent":"<Task><Actions><Exec Command=\"powershell.exe\" Arguments=\"-WindowStyle Hidden\" /></Actions></Task>"}
+{"TimeCreated":"2026-06-12T09:18:00Z","EventID":4720,"Computer":"DC01.contoso.local","SubjectUserName":"alice@contoso.com","TargetUserName":"svc_backup_temp"}
