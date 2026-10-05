@@ -5,6 +5,8 @@ import pytest
 
 from core.detector import Detector
 from core.event import Event
+from core.identity import same_identity
+from core.alerter import Alert
 from core.rule_engine import Rule, RuleEngine
 
 
@@ -58,6 +60,43 @@ def test_cross_source_sequence_rejects_different_identity():
         make_event("2026-01-01T10:05:00", "windows", "special_privileges_assigned", "bob@example.com"),
     ]
     assert Detector(RuleEngine([rule])).run(events) == []
+
+
+def test_hybrid_identity_matches_sam_account_to_upn_but_not_colliding_upns():
+    assert same_identity("alice", "alice@example.com")
+    assert same_identity(r"CORP\alice", "alice@example.com")
+    assert not same_identity("alice@one.example", "alice@two.example")
+
+
+def test_cross_source_sequence_uses_normalized_hybrid_identity():
+    rule = Rule(
+        id="TEST-ALIAS", title="Hybrid", description="", type="correlation",
+        severity="critical", sources=("entra", "windows"), attack={"id": "T1078"},
+        remediation="Respond", timeframe_minutes=15, group_by="user",
+        sequence=(
+            {"source": "entra", "conditions": {"action": "user_sign_in"}},
+            {"source": "windows", "conditions": {"action": "special_privileges_assigned"}},
+        ),
+    )
+    events = [
+        make_event("2026-01-01T10:00:00", "entra", "user_sign_in", "alice@example.com"),
+        make_event("2026-01-01T10:05:00", "windows", "special_privileges_assigned", r"CORP\alice"),
+    ]
+    assert len(Detector(RuleEngine([rule])).run(events)) == 1
+
+
+def test_event_and_alert_fingerprints_are_stable_across_upload_names():
+    first = Event(timestamp="2026-01-01T10:00:00Z", source="entra", event_type="signin",
+                  action="user_sign_in", user="alice@example.com", details={"risk": "high"},
+                  raw={"id": "event-1"}, origin_file="a.json")
+    second = Event(timestamp="2026-01-01T10:00:00Z", source="entra", event_type="signin",
+                   action="user_sign_in", user="alice@example.com", details={"risk": "high"},
+                   raw={"id": "event-1"}, origin_file="b.json")
+    rule = Rule(id="TEST-STABLE", title="Stable", description="", type="event", severity="high",
+                sources=("entra",), attack={}, remediation="Review", match={"action": "user_sign_in"})
+    assert first.fingerprint() == second.fingerprint()
+    assert first.id == second.id
+    assert Alert.create(rule, [first]).id == Alert.create(rule, [second]).id
 
 
 @pytest.mark.parametrize(

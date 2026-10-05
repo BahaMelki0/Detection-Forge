@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -39,6 +39,7 @@ class WorkspaceState:
     files: list[IngestedFile]
     events: list[Event]
     updated_at: str | None = None
+    last_append_duplicates: int = field(default=0, repr=False)
 
 
 class AnalysisWorkspace:
@@ -58,10 +59,32 @@ class AnalysisWorkspace:
     def append(self, files: list[IngestedFile], events: list[Event]) -> WorkspaceState:
         state = self.load()
         state.files.extend(files)
-        state.events.extend(events)
+        state.events, duplicate_count = self.merge_events(state.events, events)
+        state.last_append_duplicates = duplicate_count
         state.updated_at = utc_now()
         self._save(state)
         return state
+
+    @staticmethod
+    def merge_events(existing_events: list[Event], new_events: list[Event]) -> tuple[list[Event], int]:
+        merged = list(existing_events)
+        indexes = {event.fingerprint(): index for index, event in enumerate(merged)}
+        duplicate_count = 0
+        for event in new_events:
+            fingerprint = event.fingerprint()
+            existing_index = indexes.get(fingerprint)
+            if existing_index is None:
+                indexes[fingerprint] = len(merged)
+                merged.append(event)
+                continue
+            duplicate_count += 1
+            existing = merged[existing_index]
+            origins = list(dict.fromkeys(
+                (existing.origin_files or ([existing.origin_file] if existing.origin_file else []))
+                + (event.origin_files or ([event.origin_file] if event.origin_file else []))
+            ))
+            merged[existing_index] = replace(existing, origin_files=origins)
+        return merged, duplicate_count
 
     def clear(self) -> None:
         self.path.unlink(missing_ok=True)

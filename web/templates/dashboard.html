@@ -1,117 +1,64 @@
 {% extends "base.html" %}
-{% macro upload_row(required=false) %}
-<div class="upload-row">
-  <span class="row-number">01</span>
-  <label><span>File</span><input type="file" name="files" accept=".json,.jsonl,.ndjson,application/json" {{ 'required' if required }}></label>
-  <label><span>Telemetry type</span>
-    <select name="types">{% for value in file_types %}<option value="{{ value }}">{{ value|replace('_', ' ')|title }}</option>{% endfor %}</select>
-  </label>
-  <button class="remove-upload" type="button" aria-label="Remove file">&times;</button>
-</div>
-{% endmacro %}
-{% block title %}Alert queue &middot; Detection Forge{% endblock %}
+{% block title %}Investigations &middot; Detection Forge{% endblock %}
 {% block content %}
 <section class="page-heading">
   <div>
-    <p class="eyebrow">SECURITY OPERATIONS / INVESTIGATION WORKSPACE</p>
-    <h1>Detection overview</h1>
-    <p>Upload telemetry over time and correlate every file in one persistent workspace.</p>
+    <p class="eyebrow">SECURITY OPERATIONS / CASE WORKSPACE</p>
+    <h1>Investigations</h1>
+    <p>Create a case for each investigation. Logs are correlated only with other logs in that case.</p>
   </div>
-  <div class="live-chip"><i></i>{{ workspace_files|length }} files &middot; {{ workspace_event_count }} events</div>
+  <div class="live-chip"><i></i>{{ open_case_count }} open cases &middot; {{ workspace_event_count }} events</div>
 </section>
 
-<details class="panel upload-panel" {{ 'open' if not workspace_files }}>
-  <summary>
-    <span><b>Add telemetry</b><small>JSON and JSONL files are normalized, remembered, and analyzed together</small></span>
-    <strong>IMPORT LOGS <i>+</i></strong>
-  </summary>
-  <form action="{{ url_for('analyze_upload') }}" method="post" enctype="multipart/form-data">
-    <div class="upload-intro">
-      <p>Assign a profile to every file. Add as many rows as needed; previous workspace events remain available for correlation.</p>
-      <span>32 MB PER REQUEST &middot; RAW UPLOADS ARE DISCARDED</span>
-    </div>
-    <div class="upload-rows" id="upload-rows">{{ upload_row(true) }}</div>
-    <template id="upload-row-template">{{ upload_row(false) }}</template>
-    <div class="upload-actions">
-      <button class="secondary-button" type="button" id="add-upload">+ ADD ANOTHER FILE</button>
-      <span>New detections are calculated across the complete workspace history.</span>
-      <button type="submit">RUN DETECTION <b>&rarr;</b></button>
-    </div>
+<section class="panel create-case-panel">
+  <div class="panel-header"><div><h2>Start an investigation</h2><span>Give related telemetry a shared case boundary</span></div></div>
+  <form class="create-case-form" action="{{ url_for('create_case') }}" method="post">
+    <label><span>Case name</span><input name="name" maxlength="160" placeholder="e.g. Suspicious Entra sign-in &mdash; 1 October" required></label>
+    <label><span>Description <small>optional</small></span><input name="description" maxlength="2000" placeholder="What are you investigating?"></label>
+    <button type="submit">CREATE CASE <b>&rarr;</b></button>
   </form>
-</details>
-
-{% if workspace_files %}
-<section class="panel workspace-panel">
-  <div class="panel-header">
-    <div><h2>Ingested file memory</h2><span>{{ workspace_files|length }} files retained as {{ workspace_event_count }} normalized events</span></div>
-    <div class="workspace-actions">
-      <a href="{{ url_for('export_report') }}">EXPORT REPORT</a>
-      <form action="{{ url_for('clear_workspace') }}" method="post" onsubmit="return confirm('Clear all uploaded-file memory, events, and alerts?')"><button type="submit">CLEAR DATA</button></form>
-    </div>
-  </div>
-  <div class="file-memory">
-  {% for file in workspace_files|reverse %}
-    <article><span class="source {{ file.source }}">{{ file.source }}</span><div><strong>{{ file.filename }}</strong><small>{{ file.profile|replace('_', ' ') }} &middot; {{ file.event_count }} events</small></div><time>{{ file.uploaded_at|short_time }}</time></article>
-  {% endfor %}
-  </div>
 </section>
-{% endif %}
 
 <section class="metrics" aria-label="Alert totals">
-  <article><span>Total alerts</span><strong>{{ alerts|length }}</strong><small>Across workspace history</small></article>
-  <article class="critical"><span>Critical</span><strong>{{ counts.get('critical', 0) }}</strong><small>Immediate response</small></article>
-  <article class="high"><span>High</span><strong>{{ counts.get('high', 0) }}</strong><small>Priority investigation</small></article>
+  <article><span>Open cases</span><strong>{{ open_case_count }}</strong><small>Independent investigations</small></article>
+  <article class="critical"><span>Critical alerts</span><strong>{{ counts.get('critical', 0) }}</strong><small>Across open cases</small></article>
+  <article class="high"><span>High alerts</span><strong>{{ counts.get('high', 0) }}</strong><small>Across open cases</small></article>
   <article><span>Active rules</span><strong>{{ rule_count }}</strong><small>Detection-as-code</small></article>
 </section>
 
 <section class="panel">
-  <div class="panel-header">
-    <div><h2>Alert queue</h2><span>{{ alerts|length }} detections &middot; sorted by severity</span></div>
-    {% if alerts %}<a class="read-only" href="{{ url_for('export_report') }}">EXPORT REPORT</a>{% endif %}
-  </div>
-  {% if alerts %}
-  <div class="table-wrap">
-    <table>
-      <thead><tr><th>Severity</th><th>Detection</th><th>Input file</th><th>Source</th><th>MITRE ATT&amp;CK</th><th>Observed</th><th></th></tr></thead>
-      <tbody>
-      {% for alert in alerts %}
-        <tr>
-          <td><span class="severity {{ alert.severity }}"><i></i>{{ alert.severity }}</span></td>
-          <td><a class="detection-name" href="{{ url_for('alert_detail', alert_id=alert.id) }}">{{ alert.rule_title }}</a><small>{{ alert.rule_id }}</small></td>
-          <td><div class="origin-files">{% for filename in alert.events|origin_files %}<span>{{ filename }}</span>{% endfor %}</div></td>
-          <td><div class="sources">{% for source in alert.sources %}<span class="source {{ source }}">{{ source }}</span>{% endfor %}</div></td>
-          <td><a class="technique" href="{{ alert.attack.url }}" target="_blank" rel="noopener">{{ alert.attack.id }}<small>{{ alert.attack.name }}</small></a></td>
-          <td class="timestamp">{{ alert.timestamp|short_time }}</td>
-          <td><a class="arrow" href="{{ url_for('alert_detail', alert_id=alert.id) }}" aria-label="View alert">&rsaquo;</a></td>
-        </tr>
-      {% endfor %}
-      </tbody>
-    </table>
-  </div>
-  {% else %}
-    <div class="empty"><strong>No analysis results yet</strong><span>Upload telemetry above or use <code>python main.py analyze --file PATH --type TYPE</code>.</span></div>
+  <div class="panel-header"><div><h2>Cases</h2><span>Open a case to upload logs and analyze its own evidence</span></div><a class="read-only" href="{{ url_for('export_report') }}">EXPORT OPEN CASES</a></div>
+  {% if cases %}<div class="case-list">
+    {% for case in cases %}
+    <a class="incident-row" href="{{ url_for('incident_detail', case_id=case.id) }}">
+      <span class="severity {{ case.severity }}"><i></i>{{ case.severity }}</span>
+      <span class="incident-title"><strong>{{ case.title }} <em class="status-pill {{ investigation_by_id[case.id].status }}">{{ investigation_by_id[case.id].status }}</em></strong><small>{{ case.alerts|length }} alerts &middot; {{ case.sources|join(', ') if case.sources else 'No analysis yet' }}{% if case.users %} &middot; {{ case.users|join(', ') }}{% endif %}</small></span>
+      <span class="priority-score">{{ case.priority }}<small>PRIORITY</small></span>
+      <time>{{ case.updated_at|short_time }}</time><span class="arrow">&rsaquo;</span>
+    </a>
+    {% endfor %}
+  </div>{% else %}
+  <div class="empty"><strong>No investigation cases yet</strong><span>Create a case above, then upload only the logs that belong to that investigation.</span></div>
   {% endif %}
 </section>
 
-<script>
-(() => {
-  const rows = document.getElementById('upload-rows');
-  const template = document.getElementById('upload-row-template');
-  const renumber = () => [...rows.querySelectorAll('.upload-row')].forEach((row, index) => {
-    row.querySelector('.row-number').textContent = String(index + 1).padStart(2, '0');
-    row.querySelector('.remove-upload').hidden = rows.children.length === 1;
-  });
-  document.getElementById('add-upload').addEventListener('click', () => {
-    rows.appendChild(template.content.cloneNode(true));
-    renumber();
-  });
-  rows.addEventListener('click', event => {
-    if (event.target.classList.contains('remove-upload') && rows.children.length > 1) {
-      event.target.closest('.upload-row').remove();
-      renumber();
-    }
-  });
-  renumber();
-})();
-</script>
+<section class="panel">
+  <div class="panel-header"><div><h2>Recent alerts</h2><span>{{ alerts|length }} alerts from open cases &middot; no cross-case correlation</span></div></div>
+  {% if alerts %}<div class="table-wrap"><table>
+    <thead><tr><th>Severity</th><th>Detection</th><th>Case</th><th>Input file</th><th>Source</th><th>MITRE ATT&amp;CK</th><th>Observed</th></tr></thead>
+    <tbody>{% for row in alert_rows %}{% set alert = row.alert %}{% set case = row.case %}
+      <tr>
+          <td><span class="severity {{ alert.severity }}"><i></i>{{ alert.severity }}</span></td>
+        <td><a class="detection-name" href="{{ url_for('case_alert_detail', case_id=case.id, alert_id=alert.id) }}">{{ alert.rule_title }}</a><small>{{ alert.rule_id }}</small></td>
+        <td><a href="{{ url_for('incident_detail', case_id=case.id) }}">{{ case.name }}</a></td>
+        <td><div class="origin-files">{% for filename in alert.events|origin_files %}<span>{{ filename }}</span>{% endfor %}</div></td>
+        <td><div class="sources">{% for source in alert.sources %}<span class="source {{ source }}">{{ source }}</span>{% endfor %}</div></td>
+        <td><a class="technique" href="{{ alert.attack.url }}" target="_blank" rel="noopener">{{ alert.attack.id }}<small>{{ alert.attack.name }}</small></a></td>
+        <td class="timestamp">{{ alert.timestamp|short_time }}</td>
+      </tr>
+    {% endfor %}</tbody>
+  </table></div>{% else %}<div class="empty"><strong>No alerts yet</strong><span>Upload telemetry inside an open case to run detections.</span></div>{% endif %}
+</section>
 {% endblock %}
+
+\n

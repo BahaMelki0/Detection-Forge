@@ -68,6 +68,12 @@ def input_from_profile(
     )
 
 
+def infer_profile(path: str | Path) -> dict:
+    """Identify a known JSON telemetry schema from file contents."""
+    from core.log_detection import detect_log_type
+    return detect_log_type(path)
+
+
 def connector_for(specification: InputSpec) -> BaseConnector:
     if specification.source == "entra":
         return EntraConnector(specification.log_type)

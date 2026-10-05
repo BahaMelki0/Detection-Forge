@@ -1,7 +1,7 @@
 {% extends "base.html" %}
-{% block title %}{{ alert.rule_id }} · Detection Forge{% endblock %}
+{% block title %}{{ alert.rule_id }} &middot; Detection Forge{% endblock %}
 {% block content %}
-<a class="back" href="{{ url_for('dashboard') }}">← Back to alert queue</a>
+<a class="back" href="{{ url_for('incident_detail', case_id=investigation.id) }}">&larr; Back to investigation</a>
 <section class="detail-heading">
   <span class="severity {{ alert.severity }}"><i></i>{{ alert.severity }}</span>
   <h1>{{ alert.rule_title }}</h1>
@@ -19,7 +19,7 @@
           <i></i>
           <div class="timeline-top"><span class="source {{ event.source }}">{{ event.source }}</span><time>{{ event.timestamp|short_time }}</time></div>
           <h3>{{ event.action|replace('_', ' ')|title }}</h3>
-          <dl><div><dt>Input file</dt><dd>{{ event.origin_file or 'Unknown' }}</dd></div><div><dt>User</dt><dd>{{ event.user or '—' }}</dd></div><div><dt>Host</dt><dd>{{ event.host or '—' }}</dd></div><div><dt>Source IP</dt><dd>{{ event.source_ip or '—' }}</dd></div><div><dt>Outcome</dt><dd>{{ event.outcome }}</dd></div></dl>
+          <dl><div><dt>Input file{{ 's' if event.origin_files|length > 1 }}</dt><dd>{{ (event.origin_files or [event.origin_file or 'Unknown'])|join(', ') }}</dd></div><div><dt>User</dt><dd>{{ event.user or '&mdash;' }}</dd></div><div><dt>Host</dt><dd>{{ event.host or '&mdash;' }}</dd></div><div><dt>Source IP</dt><dd>{{ event.source_ip or '&mdash;' }}</dd></div><div><dt>Outcome</dt><dd>{{ event.outcome }}</dd></div></dl>
           <details><summary>View raw event</summary><pre>{{ event.raw|tojson(indent=2) }}</pre></details>
         </article>
       {% endfor %}
@@ -32,7 +32,7 @@
       <strong>{{ alert.attack.id }}</strong>
       <h2>{{ alert.attack.name }}</h2>
       <span>{{ alert.attack.tactic }}</span>
-      <a href="{{ alert.attack.url }}" target="_blank" rel="noopener">Open technique ↗</a>
+      <a href="{{ alert.attack.url }}" target="_blank" rel="noopener">Open technique &#8599;</a>
     </section>
     <section class="panel side-card remediation">
       <p class="eyebrow">RECOMMENDED RESPONSE</p>
@@ -42,3 +42,5 @@
   </aside>
 </div>
 {% endblock %}
+
+\n

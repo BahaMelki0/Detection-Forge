@@ -1,0 +1,47 @@
+/* Signal Slate shared project tokens. */
+:root {
+  color-scheme: dark;
+  --brand-bg: #090a0d;
+  --brand-surface: #111318;
+  --brand-elevated: #191c22;
+  --brand-border: #2b3039;
+  --brand-text: #f0f1f3;
+  --brand-muted: #9a9faa;
+  --brand-accent: #f04452;
+  --brand-accent-hover: #ff6670;
+  --brand-info: #8abcf0;
+  --brand-warning: #e9bd62;
+  --brand-critical: #f1777d;
+  --brand-success: #65d39b;
+  --brand-sans: Inter, "Segoe UI", system-ui, sans-serif;
+  --brand-mono: "IBM Plex Mono", Consolas, monospace;
+  --bg: var(--brand-bg);
+  --panel: var(--brand-surface);
+  --panel-2: var(--brand-elevated);
+  --line: var(--brand-border);
+  --text: var(--brand-text);
+  --muted: var(--brand-muted);
+  --cyan: var(--brand-accent);
+  --red: var(--brand-critical);
+  --orange: #f1a76a;
+  --yellow: var(--brand-warning);
+}
+
+body { font-family: var(--brand-sans); }
+.brand-mark { display:block; width:42px; height:42px; object-fit:contain; border:0; border-radius:11px; box-shadow:none; background:transparent; }
+.brand { gap:12px; }
+/* Shared desktop sidebar layout; mobile collapses to a top navigation. */
+body { background: var(--brand-bg); }
+.topbar { position:fixed; inset:0 auto 0 0; width:230px; height:100vh; padding:28px 20px; flex-direction:column; align-items:stretch; gap:32px; background:var(--brand-surface); border-right:1px solid var(--line); }
+.brand { margin:0; }
+.brand-copy strong { font-size:15px; }
+.brand-copy small { font-size:7px; }
+.topbar nav { display:flex; flex-direction:column; gap:8px; }
+.topbar nav a { padding:12px; border:0; border-radius:8px; }
+.topbar nav a.active { background:var(--brand-elevated); color:var(--brand-accent); }
+.engine-status { margin-top:auto; }
+.shell { width:calc(100% - 278px); margin-left:254px; padding-top:32px; }
+.case-tabs { top:0; border-radius:8px; }
+footer { margin-left:230px; }
+.panel, .metrics>div, .case-tabs { background:var(--brand-surface); }
+@media(max-width:900px) { .topbar { position:static; width:100%; height:auto; flex-direction:row; flex-wrap:wrap; padding:16px; gap:16px; } .topbar nav { flex-direction:row; } .engine-status { margin:0 0 0 auto; } .shell { width:calc(100% - 32px); margin:0 auto; } footer { margin-left:0; } }

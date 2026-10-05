@@ -4,6 +4,17 @@ __pycache__/
 .venv/
 venv/
 .env
+.env.*
+!.env.example
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
+*.log
 data/alerts.json
 data/workspace.json
+data/cases/
+data/rule_history/
 data/*.tmp
+output/

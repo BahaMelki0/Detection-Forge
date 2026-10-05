@@ -4,16 +4,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}Detection Forge{% endblock %}</title>
+  <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='detection-forge-mark.svg') }}">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='design-system.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='obsidian.css') }}">
 </head>
 <body>
   <header class="topbar">
     <a class="brand" href="{{ url_for('dashboard') }}" aria-label="Detection Forge dashboard">
-      <span class="brand-mark" aria-hidden="true">DF</span>
+      <img class="brand-mark" src="{{ url_for('static', filename='detection-forge-mark.svg') }}" alt="">
       <span class="brand-copy"><strong>Detection Forge</strong><small>HYBRID THREAT ANALYTICS</small></span>
     </a>
     <nav aria-label="Primary navigation">
-      <a class="{{ 'active' if request.endpoint == 'dashboard' else '' }}" href="{{ url_for('dashboard') }}">Alerts</a>
+      <a class="{{ 'active' if request.endpoint == 'dashboard' or (request.endpoint and request.endpoint.startswith(('incident_detail', 'case_alert_detail', 'export_case_report'))) else '' }}" href="{{ url_for('dashboard') }}">Cases</a>
       <a class="{{ 'active' if request.endpoint in ('rules', 'new_rule') else '' }}" href="{{ url_for('rules') }}">Detection rules</a>
     </nav>
     <div class="engine-status"><span></span> Engine online</div>
@@ -24,6 +27,6 @@
     {% endwith %}
     {% block content %}{% endblock %}
   </main>
-  <footer>Detection Forge · Source-agnostic detection engine · Analyst console</footer>
+  <footer>Detection Forge &middot; Source-agnostic detection engine &middot; Analyst console</footer>
 </body>
 </html>

@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 56" role="img" aria-labelledby="title">
+  <title id="title">Detection Forge</title>
+  <defs><linearGradient id="g" x1="6" y1="4" x2="48" y2="52" gradientUnits="userSpaceOnUse"><stop stop-color="#ff6670"/><stop offset="1" stop-color="#d72e3d"/></linearGradient></defs>
+  <rect x="2" y="2" width="52" height="52" rx="16" fill="#111318" stroke="#2b3039" stroke-width="1.5"/>
+  <path d="M12 39h7V27h-7v12Zm13 0h7V16h-7v23Zm13 0h7V24h-7v15Z" fill="url(#g)"/>
+  <path d="m13 22 12-7 13 4 8-6" fill="none" stroke="#f0f1f3" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="47" cy="13" r="2.5" fill="#f04452"/>
+  <text x="66" y="27" fill="#f0f1f3" font-family="Segoe UI,Arial,sans-serif" font-size="19" font-weight="700" letter-spacing="-.4">Detection Forge</text>
+  <text x="67" y="43" fill="#9a9faa" font-family="Consolas,monospace" font-size="9" font-weight="600" letter-spacing="1.5">HYBRID THREAT ANALYTICS</text>
+</svg>

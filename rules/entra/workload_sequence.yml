@@ -1,0 +1,22 @@
+id: DF-ENTRA-005
+title: Service principal credential addition followed by authentication
+version: 1
+description: A service principal credential was added and the same target principal authenticated within 30 minutes. This sequence requires maintenance and workload-owner validation; it does not prove misuse.
+type: correlation
+sources: [entra]
+severity: medium
+group_by: details.primary_target_id
+timeframe_minutes: 30
+sequence:
+  - source: entra
+    conditions:
+      event_type: audit
+      outcome: success
+      action: Add service principal credentials
+  - source: entra
+    conditions:
+      event_type: workload_sign_in
+      action: service_principal_sign_in
+      outcome: success
+attack: {id: T1098.001, name: Additional Cloud Credentials, tactic: Persistence}
+remediation: Verify the credential change approval and workload owner, inspect sign-in context, and investigate only if the activity is unauthorized or anomalous. Use separate cases for separate tenants.

@@ -30,6 +30,8 @@ class Rule:
     sequence: tuple[dict[str, Any], ...] = ()
     group_by: str = "user"
     timeframe_minutes: int = 15
+    exclusions: tuple[dict[str, Any], ...] = ()
+    version: int = 1
 
     @classmethod
     def from_dict(cls, value: dict[str, Any], origin: Path) -> "Rule":
@@ -45,6 +47,22 @@ class Rule:
             raise RuleError(f"{origin}: unsupported severity {severity}")
         sources = value.get("sources") or ([value["source"]] if value.get("source") else [])
         sequence = tuple(value.get("sequence", []))
+        exclusions = value.get('exclusions', [])
+        version = value.get('version', 1)
+        if not isinstance(version, int) or isinstance(version, bool) or version < 1:
+            raise RuleError(f'{origin}: version must be a positive integer')
+        if not isinstance(exclusions, list) or any(not isinstance(item, dict) or not item.get('conditions') or not isinstance(item['conditions'], dict) for item in exclusions):
+            raise RuleError(f"{origin}: exclusions must contain non-empty condition mappings")
+        for exclusion in exclusions:
+            for expected in exclusion['conditions'].values():
+                if isinstance(expected, dict):
+                    if not expected or set(expected) - {'equals', 'not_equals', 'contains', 'contains_any', 'in', 'regex', 'gt', 'gte', 'lt', 'lte'}:
+                        raise RuleError(f"{origin}: unsupported exclusion operator")
+                    if 'regex' in expected:
+                        try:
+                            re.compile(expected['regex'])
+                        except (re.error, TypeError) as exc:
+                            raise RuleError(f"{origin}: invalid exclusion regex") from exc
         if rule_type == "event" and not value.get("match"):
             raise RuleError(f"{origin}: event rules require match")
         if rule_type == "correlation" and len(sequence) < 2:
@@ -57,6 +75,8 @@ class Rule:
             match=value.get("match"), sequence=sequence,
             group_by=str(value.get("group_by", "user")),
             timeframe_minutes=int(value.get("timeframe_minutes", 15)),
+            exclusions=tuple(exclusions),
+            version=version,
         )
 
 
@@ -113,7 +133,12 @@ def _condition_matches(actual: Any, expected: Any) -> bool:
         if operator == "regex" and re.search(str(operand), str(actual or ""), re.IGNORECASE) is None:
             return False
         if operator in {"gt", "gte", "lt", "lte"}:
-            comparisons = {"gt": actual > operand, "gte": actual >= operand, "lt": actual < operand, "lte": actual <= operand}
+            if actual is None:
+                return False
+            try:
+                comparisons = {"gt": actual > operand, "gte": actual >= operand, "lt": actual < operand, "lte": actual <= operand}
+            except TypeError:
+                return False
             if not comparisons[operator]:
                 return False
     return True

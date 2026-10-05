@@ -1,0 +1,51 @@
+- id: DF-ENTRA-002
+  title: Application or service principal credentials changed
+  description: Successful credential modification requires validation against approved application maintenance. This event alone does not prove compromise.
+  type: event
+  source: entra
+  severity: medium
+  match:
+    conditions:
+      event_type: audit
+      outcome: success
+      action:
+        in:
+          - Add service principal credentials
+          - Add application password
+          - Update application - Certificates and secrets management
+  attack: {id: T1098.001, name: Additional Cloud Credentials, tactic: Persistence}
+  remediation: Verify the initiating actor and target application, compare credential changes with approved maintenance, and review subsequent workload sign-ins before containment.
+- id: DF-ENTRA-003
+  title: Application consent or app-only access granted
+  description: A successful application grant is a review signal; inspect the granted permissions and approval context before classifying it as malicious.
+  type: event
+  source: entra
+  severity: medium
+  match:
+    conditions:
+      event_type: audit
+      outcome: success
+      action:
+        in:
+          - Consent to application
+          - Add delegated permission grant
+          - Add app role assignment to the service principal
+  attack: {id: T1098, name: Account Manipulation, tactic: Persistence}
+  remediation: Inspect the target service principal, granted permissions, publisher and tenant consent policy; confirm authorization and investigate subsequent access.
+- id: DF-ENTRA-004
+  title: Directory role membership assigned
+  description: Successful role assignment requires review of role privilege, recipient and authorization. Routine approved assignments can generate this signal.
+  type: event
+  source: entra
+  severity: medium
+  match:
+    conditions:
+      event_type: audit
+      outcome: success
+      action:
+        in:
+          - Add member to role
+          - Add eligible member to role
+          - Add scoped member to role
+  attack: {id: T1098.003, name: Additional Cloud Roles, tactic: Privilege Escalation}
+  remediation: Verify the role and assignee, identify the initiating actor, check the approval or PIM context, and investigate unauthorized privilege changes.

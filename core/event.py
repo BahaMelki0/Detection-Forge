@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
+import json
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from typing import Any
-from uuid import uuid4
 
 
 def parse_timestamp(value: str | datetime) -> datetime:
@@ -34,11 +35,27 @@ class Event:
     origin_file: str | None = None
     origin_type: str | None = None
     origin_file_id: str | None = None
-    id: str = field(default_factory=lambda: str(uuid4()))
+    id: str = ""
+    origin_files: list[str] = field(default_factory=list)
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "timestamp", parse_timestamp(self.timestamp))
         object.__setattr__(self, "source", self.source.lower())
+        if not self.origin_files and self.origin_file:
+            object.__setattr__(self, "origin_files", [self.origin_file])
+        if not self.id:
+            object.__setattr__(self, "id", f"evt-{self.fingerprint()[:24]}")
+
+    def fingerprint(self) -> str:
+        """Stable identity for a normalized source record, independent of upload metadata."""
+        material = {
+            "timestamp": self.timestamp.isoformat(), "source": self.source,
+            "event_type": self.event_type, "action": self.action, "outcome": self.outcome,
+            "user": self.user, "host": self.host, "source_ip": self.source_ip,
+            "details": self.details, "raw": self.raw,
+        }
+        encoded = json.dumps(material, sort_keys=True, ensure_ascii=False, default=str, separators=(",", ":"))
+        return hashlib.sha256(encoded.encode("utf-8")).hexdigest()
 
     def to_dict(self) -> dict[str, Any]:
         value = asdict(self)

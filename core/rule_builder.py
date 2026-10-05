@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import date
+import json
 import re
 from typing import Any
 from urllib.parse import urlparse
@@ -14,11 +15,14 @@ CONDITION_FIELDS = (
     "details.task_name", "details.service_name", "details.service_file_name",
     "details.risk_level", "details.risk_state", "details.conditional_access",
     "details.application", "details.country", "details.category", "details.operation_type",
+    'details.actor_type', 'details.actor_id', 'details.actor_application_id', 'details.actor_application_name',
+    'details.target_ids', 'details.target_types', 'details.modified_property_names',
+    'details.primary_target_id', 'details.service_principal_id', 'details.application_id',
 )
 CONDITION_OPERATORS = ("equals", "not_equals", "contains", "contains_any", "in", "regex")
 SOURCES = ("entra", "windows", "sysmon")
 SEVERITIES = ("low", "medium", "high", "critical")
-GROUP_FIELDS = ("user", "host", "source_ip")
+GROUP_FIELDS = ("user", "host", "source_ip", 'details.primary_target_id')
 
 
 class RuleFormError(ValueError):
@@ -41,6 +45,7 @@ def build_rule_document(form: Any) -> dict[str, Any]:
         "title": _required(form, "title"),
         "description": _required(form, "description"),
         "type": rule_type,
+        'version': 1,
         "severity": severity,
         "status": "experimental",
         "author": "Detection Forge UI",
@@ -56,6 +61,11 @@ def build_rule_document(form: Any) -> dict[str, Any]:
     false_positives = [value.strip() for value in form.get("false_positives", "").splitlines() if value.strip()]
     if false_positives:
         document["false_positives"] = false_positives
+    if form.get('exclusions', '').strip():
+        try:
+            document['exclusions'] = json.loads(form['exclusions'])
+        except json.JSONDecodeError as exc:
+            raise RuleFormError('Exclusions must be valid JSON.') from exc
 
     if rule_type == "event":
         sources = form.getlist("sources")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -28,12 +29,15 @@ class Alert:
 
     @classmethod
     def create(cls, rule: Rule, events: list[Event]) -> "Alert":
+        evidence = "|".join(event.fingerprint() for event in events)
+        alert_id = "alert-" + hashlib.sha256(f"{rule.id}|{evidence}".encode("utf-8")).hexdigest()[:20]
         return cls(
             rule_id=rule.id, rule_title=rule.title, description=rule.description,
             severity=rule.severity, sources=sorted({event.source for event in events}),
             attack=rule.attack, remediation=rule.remediation,
             events=[event.to_dict() for event in events],
             timestamp=max(event.timestamp for event in events).isoformat().replace("+00:00", "Z"),
+            id=alert_id,
         )
 
     @classmethod
@@ -63,4 +67,3 @@ class AlertStore:
             return []
         payload = json.loads(self.path.read_text(encoding="utf-8"))
         return [Alert.from_dict(value) for value in payload.get("alerts", [])]
-
